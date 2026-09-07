@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Indigo Entity — The Hollow Tide</title>
+<style>
+:root{--bg:#0a0c15;--bg2:#0e1120;--panel:#151928;--panel2:#1b2036;
+--line:#252b45;--line2:#303757;--text:#e9ecf8;--dim:#8f97b3;--faint:#646d8c;
+--head:#f4f6ff;--accent:#7c5cff;--accent2:#4dc3ff;--gold:#f0b34c;
+--coral:#ff6b81;--grad:linear-gradient(135deg,#7c5cff,#4dc3ff);
+--shadow:0 10px 34px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--text);
+background:radial-gradient(1100px 640px at 85% -12%,#1b1f3d 0%,var(--bg) 55%),
+radial-gradient(900px 600px at -10% 110%,#141a35 0%,var(--bg) 60%),var(--bg);
+font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gatecard{background:linear-gradient(180deg,var(--panel2),var(--panel));
+border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);
+padding:42px 36px;max-width:430px;width:100%;text-align:center}
+.gatecard h1{margin:.2em 0 .1em;font-size:1.4rem;color:var(--head)}
+.gatecard p{color:var(--dim);font-size:.95rem;margin:.4em 0 1.4em}
+.gatecard input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);
+background:var(--bg2);color:var(--text);font-size:1rem;text-align:center;letter-spacing:.06em}
+.gatecard input:focus{outline:none;border-color:var(--accent);
+box-shadow:0 0 0 3px rgba(124,92,255,.22)}
+.gatecard button{margin-top:14px;width:100%;padding:12px;border:0;border-radius:12px;
+cursor:pointer;background:var(--grad);color:#fff;font-weight:800;font-size:1rem;
+box-shadow:0 6px 18px rgba(124,92,255,.35)}
+.gatecard .err{color:var(--coral);font-size:.9rem;min-height:1.3em;margin-top:10px}
+#app{display:none;max-width:1020px;margin:0 auto;padding:0 20px 120px}
+header.top{position:sticky;top:0;z-index:5;background:rgba(10,12,21,.9);
+backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+margin:0 -20px;padding:12px 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:800;color:var(--head)}
+.brand .tide{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tabbtn{padding:7px 18px;border-radius:999px;border:1px solid var(--line2);background:transparent;
+color:var(--dim);cursor:pointer;font-weight:700;font-size:.92rem;transition:all .15s}
+.tabbtn:hover{color:var(--text);border-color:var(--faint)}
+.tabbtn.on{background:var(--grad);border-color:transparent;color:#fff;
+box-shadow:0 4px 14px rgba(124,92,255,.4)}
+.updated{margin-left:auto;color:var(--dim);font-size:.8rem}
+h1{color:var(--head);font-size:1.9rem;margin:.9em 0 .2em}
+h2{color:var(--head)}
+.stat{display:inline-block;background:linear-gradient(180deg,var(--panel2),var(--panel));
+border:1px solid var(--line);border-radius:16px;padding:14px 24px;margin:8px 12px 8px 0;
+box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.stat .v{font-size:1.6rem;font-weight:800;background:var(--grad);
+-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat.goldv .v{background:none;color:var(--gold)}
+.stat .k{color:var(--dim);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.pcard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);
+border-radius:16px;padding:16px 20px;margin:16px 0;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.pcard h2{margin:.1em 0 .2em}
+.pmeta{color:var(--dim);font-size:.86rem;margin-bottom:8px}
+.pmeta b{color:var(--gold)}
+.fsm{font-size:.85rem;font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:.6em 0;border-radius:12px;overflow:hidden}
+th{background:var(--panel2);color:var(--dim);text-align:left;padding:9px 12px;
+font-size:.74rem;text-transform:uppercase;letter-spacing:.07em}
+td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(odd){background:rgba(255,255,255,.02)}
+.muted{color:var(--dim)}
+.hint{color:var(--faint);font-size:.82rem;line-height:1.5}
+/* ---- the base map ---- */
+.livetag{margin-left:10px;font-size:.78rem;color:var(--dim);white-space:nowrap}
+.livedot,.offdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.livedot{background:#5ce08a;box-shadow:0 0 8px #5ce08a;animation:lpulse 2.4s infinite}
+.offdot{background:var(--faint)}
+@keyframes lpulse{50%{opacity:.4}}
+.basedesc{color:var(--dim);font-size:.94rem;max-width:70ch}
+.bmapwrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);
+background:#0a0d18;box-shadow:0 8px 26px rgba(0,0,0,.4);margin:14px 0 6px;touch-action:manipulation}
+.bground{position:absolute;inset:0;background:
+radial-gradient(75% 68% at 50% 52%,#1d2445 0%,#161b34 52%,#10142a 78%,#0b0e1d 100%)}
+.bground::after{content:"";position:absolute;left:9%;top:9%;right:9%;bottom:9%;
+border:2px dashed rgba(124,92,255,.28);border-radius:50%}
+.boverlay{position:absolute;inset:0}
+.bhale{position:absolute;transform:translate(-50%,-50%);cursor:pointer;text-align:center;z-index:2}
+.bhale .hbox{width:46px;height:36px;margin:0 auto;border-radius:10px;display:flex;
+align-items:center;justify-content:center;font-size:17px;
+background:linear-gradient(160deg,#262e56,#1a2038);border:1px solid var(--line2);
+box-shadow:0 3px 10px rgba(0,0,0,.45);transition:all .15s}
+.bhale:hover .hbox{border-color:var(--accent);transform:translateY(-1px)}
+.bhale.sel .hbox{outline:2px solid var(--accent);box-shadow:0 0 14px rgba(124,92,255,.55)}
+.bhale .hlbl{margin-top:3px;font-size:10.5px;font-weight:700;color:var(--text);
+text-shadow:0 1px 4px #000,0 0 8px #000;white-space:nowrap}
+.bnpc{position:absolute;width:22px;height:22px;border-radius:50%;z-index:3;
+transform:translate(-50%,-50%);background:var(--grad);border:2px solid #fff;color:#fff;
+font-size:8.5px;font-weight:800;display:flex;align-items:center;justify-content:center;
+cursor:pointer;box-shadow:0 0 10px rgba(124,92,255,.55);user-select:none}
+.bnpc::after{content:"";position:absolute;inset:-2px;border-radius:50%;
+border:2px solid rgba(124,92,255,.8);animation:bping 2.6s ease-out infinite}
+@keyframes bping{0%{transform:scale(.6);opacity:.9}80%,100%{transform:scale(2);opacity:0}}
+.bnpc.sel{outline:2px solid #fff;box-shadow:0 0 16px rgba(77,195,255,.8)}
+.npcprof-head{display:flex;gap:14px;align-items:center;margin-bottom:8px}
+.portrait{width:64px;height:64px;border-radius:14px;flex-shrink:0;display:flex;
+align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;
+background:var(--grad);overflow:hidden}
+.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.taskline{margin:10px 0 4px;font-size:.92rem}
+.taskline .k,.routine .k{display:inline-block;font-size:.7rem;font-weight:800;color:var(--accent2);
+text-transform:uppercase;letter-spacing:.09em;margin-right:8px}
+.routine{margin:10px 0 2px;font-size:.92rem}
+.routine ul{margin:6px 0 0;padding-left:20px;color:var(--dim)}
+.routine li{margin:2px 0}
+.moverow{display:flex;gap:8px;margin-top:12px}
+.moverow select{flex:1;padding:9px 10px;border-radius:10px;border:1px solid var(--line2);
+background:var(--bg2);color:var(--text);font:inherit}
+.gbtn{padding:9px 20px;border:0;border-radius:10px;background:var(--grad);color:#fff;
+font-weight:800;cursor:pointer;font:inherit;box-shadow:0 4px 14px rgba(124,92,255,.35)}
+.gbtn:disabled{opacity:.55;cursor:default}
+.npclink{color:var(--text);text-decoration:none;border-bottom:1px dotted var(--faint)}
+.npcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.npcgrid .pcard{margin:0}
+
+/* ================= PHONES =================
+   Owner ruling: every player-facing site has to work on a phone, not just the
+   dev dashboard. This file had ZERO media queries. Most of the layout is
+   already fluid — max-width, auto-fill grids, flex-wrap — so what was actually
+   broken is narrower than it looks: the gutters, the tables, and the touch
+   targets on the base map, which is the one place a player moves an NPC.
+
+   The breakpoint is 720px rather than a device width: that is where the
+   40px of side padding plus a table of four columns stops fitting. */
+@media (max-width:720px){
+  #app{padding:0 12px 90px}
+  header.top{margin:0 -12px;padding:10px 12px;gap:7px}
+  .updated{margin-left:0;flex:1 1 100%;font-size:.74rem}
+  h1{font-size:1.45rem}
+  /* Tables carry six columns on the roster and squad views. They scroll
+     inside their own box so the PAGE never scrolls sideways. */
+  .tscroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tscroll table{min-width:520px}
+  .stat{display:block;margin:8px 0;padding:12px 16px}
+  .basedesc{max-width:none}
+  .npcgrid{grid-template-columns:1fr}
+  .npcprof-head{flex-wrap:wrap}
+  .moverow{flex-wrap:wrap}
+  .moverow select{flex:1 1 100%}
+  /* 44px touch minimum. A tab pill was 33px and the hale boxes on the base
+     map are what a player taps to move somebody. */
+  .tabbtn{padding:11px 18px;min-height:44px}
+  .gbtn,.moverow select,.gatecard button,.gatecard input{min-height:44px}
+  /* 16px stops iOS zooming the page the moment the passcode field is
+     focused — on the gate, that is the first thing anyone touches. */
+  .gatecard input,.moverow select,input,select,textarea{font-size:16px}
+  .bhale .hbox{width:44px;height:44px;position:relative}
+  /* The NPC dots stay small so a hale with six of them still reads, but the
+     touchable area around each is the full 44px. This is the one place a
+     PLAYER moves somebody, so it has to answer a thumb. */
+  .bnpc{width:26px;height:26px;font-size:9.5px}
+  .bnpc::before{content:"";position:absolute;left:50%;top:50%;width:44px;
+    height:44px;border-radius:50%;transform:translate(-50%,-50%)}
+  .gatecard{padding:30px 20px}
+  th,td{padding:8px 9px}
+}
+@media (max-width:420px){
+  .tabbtn{flex:1 1 auto;text-align:center}
+}
+
+/* ---- NPC detail: blurb, health, abilities ---- */
+.npcblurb{margin:10px 0 2px;font-size:14px;line-height:1.55;color:#c7d4e6}
+.forgeline{margin-top:2px}
+.vitals{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;
+  padding-top:12px;border-top:1px solid #1e2c40}
+.vitals .k{display:block;font-size:11px;letter-spacing:.5px;
+  text-transform:uppercase;color:#7f92ad;margin-bottom:4px}
+.vitals .hp b{font-size:22px;color:#6ee7a8}
+.vitals .abils{flex:1 1 260px}
+.vitals .abils ul{margin:0;padding-left:18px}
+.vitals .abils li{margin-bottom:6px;font-size:13.5px;line-height:1.45}
+.dmg{margin-left:6px;padding:1px 7px;border-radius:7px;background:#2a1b1b;
+  border:1px solid #4b2b2b;color:#e79a9a;font-size:12px}
+
+/* ---- portrait upload (rare and above) ---- */
+.facerow{margin-top:12px;padding-top:12px;border-top:1px solid #1e2c40}
+.facelab{display:block;font-size:12px;color:#9fb0c9;margin-bottom:7px}
+.fc-file{display:block;margin-top:5px;font:inherit;font-size:12.5px;
+  color:#c7d4e6;max-width:100%}
+.fc-file::file-selector-button{margin-right:9px;padding:7px 12px;
+  border-radius:8px;border:1px solid #24344b;background:#131c2b;
+  color:#c7d4e6;font:inherit;font-size:12.5px;cursor:pointer}
+.lg-go{min-height:40px;padding:8px 18px;margin-top:8px}
+.fc-msg{margin-top:7px;font-size:12.5px}
+.fc-msg.ok{color:#6ee7a8}
+.fc-msg.err{color:#e79a9a}
+
+/* ---- forming a squad from the muster ---- */
+.mkrow{margin:0 0 20px;padding:12px;border-radius:12px;background:#0d1420;
+  border:1px solid #1e2c40}
+.mkrow input{padding:8px 11px;border-radius:9px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px;
+  margin-right:8px;min-width:200px}
+.mkrow .gbtn{margin-right:10px}
+.mkrow .hint{margin-top:8px}
+
+/* ---- the squad picker on an NPC's own card ---- */
+.sqpick{margin-top:12px;padding-top:12px;border-top:1px solid #1e2c40}
+.sqpick select{width:100%;box-sizing:border-box;margin-top:5px;padding:8px 10px;
+  border-radius:9px;background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:13px}
+.sqpick select:disabled{opacity:.5}
+.sqpick .facelab{margin-top:8px}
+.npnew{margin-top:10px;padding:10px;border-radius:10px;background:#0d1420;
+  border:1px solid #24344b}
+.npnew input,.npnew textarea{width:100%;box-sizing:border-box;margin-top:5px;
+  padding:8px 10px;border-radius:9px;background:#101a28;border:1px solid #24344b;
+  color:#e8eef7;font:inherit;font-size:13px}
+.npnew .gbtn{margin-top:10px;margin-right:10px}
+#j-new{margin-top:10px;padding:12px;border-radius:10px;background:#0d1420;
+  border:1px solid #24344b}
+#j-new .gbtn{margin-right:12px}
+
+/* ---- squads (inside the NPCs tab) ---- */
+.sqhead{display:flex;gap:14px;align-items:flex-start}
+.sqhead-t{flex:1;min-width:0}
+.sqhead h2{margin-top:0}
+.sqlogo{width:56px;height:56px;border-radius:14px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;background:#131c2b;
+  border:1px solid #24344b;color:#7f92ad;font-weight:800;font-size:16px;
+  overflow:hidden}
+.sqlogo img{width:100%;height:100%;object-fit:cover;display:block}
+.logorow{margin-top:14px;padding-top:12px;border-top:1px solid #1e2c40}
+.muster{margin:0 0 26px;padding-bottom:22px;border-bottom:1px solid #1e2c40}
+.muster>h2:first-child{margin-top:0}
+.squad h2{display:flex;align-items:center;gap:10px}
+.linkbtn{background:none;border:0;padding:0;color:#8fa6c4;font:inherit;
+  font-size:12.5px;text-decoration:underline;cursor:pointer}
+.linkbtn:hover{color:#c7d4e6}
+.sqtag{display:inline-block;padding:1px 9px;border-radius:8px;font-size:12px;
+  margin-right:6px;border:1px solid #24344b;background:#131c2b}
+.sqtag.walking{color:#e7c98a;border-color:#4b3f2b}
+.sqtag.queued{color:#9fb0c9}
+.sqtag.home{color:#6ee7a8;border-color:#2b4b3a}
+.sqtab{width:100%;margin:10px 0 4px}
+.sqtab td{padding:6px 8px 6px 0;vertical-align:middle;border-bottom:1px solid #16202f}
+.sqtab select{padding:6px 8px;border-radius:8px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px}
+.sqadd,.sqsend{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sqadd .facelab{flex:0 0 100%;margin-bottom:0}
+.sqadd select,.sqsend select{padding:8px 10px;border-radius:9px;background:#0d1420;
+  border:1px solid #24344b;color:#e8eef7;font:inherit;font-size:13px;max-width:100%}
+.whorow{display:block;margin:0 0 14px;font-size:13px;color:#9fb0c9}
+.whorow input{width:100%;max-width:320px;box-sizing:border-box;padding:9px 11px;
+  border-radius:9px;background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:14px;display:block;margin-top:5px}
+
+/* ---- the forge ---- */
+.pcard label{display:block;margin:12px 0 4px;font-size:13px;color:#9fb0c9}
+.pcard input[type=text],.pcard select,.pcard textarea{
+  width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;
+  background:#0d1420;border:1px solid #24344b;color:#e8eef7;
+  font:inherit;font-size:14px}
+.pcard textarea{resize:vertical;min-height:64px}
+.pcard input:focus,.pcard select:focus,.pcard textarea:focus{
+  outline:none;border-color:#4d7fb8}
+#f-send{margin-top:14px;padding:11px 20px;min-height:44px;border-radius:10px;
+  border:none;background:#2f6f4f;color:#fff;font:inherit;font-size:14px;
+  font-weight:600;cursor:pointer}
+#f-send:disabled{opacity:.6;cursor:default}
+.ok{margin-top:10px;color:#6ee7a8;font-size:13px}
+</style></head><body>
+<div id="gate"><div class="gatecard">
+  <h1>The Indigo Entity</h1>
+  <p>The Hollow Tide — team site. Enter your team's passcode.</p>
+  <input id="pw" type="password" autocomplete="off" placeholder="passcode">
+  <button id="go">Open</button>
+  <div class="err" id="err"></div>
+</div></div>
+<div id="app">
+  <header class="top">
+    <span class="brand">The Indigo Entity <span class="tide">· The Hollow Tide</span></span>
+    <button class="tabbtn on" data-t="team" onclick="pick('team')">Team</button>
+    <button class="tabbtn" data-t="players" onclick="pick('players')">Players</button>
+    <button class="tabbtn" data-t="base" onclick="pick('base')">Base</button>
+    <button class="tabbtn" data-t="npcs" onclick="pick('npcs')">NPCs</button>
+    <button class="tabbtn" data-t="forge" id="forgetab" style="display:none"
+            onclick="pick('forge')">Forge</button>
+    <span class="updated" id="updated"></span>
+  </header>
+  <div id="main"></div>
+</div>
+<script>
+const ENC={salt:"jsCuExaJv3rOnMyPPfD7xA==",iv:"26Ir/zjAOnZUB5bA",ct:"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",iter:310000};
+let DATA=null,LIVE=null,liveOk=false,lastSig='',tab='team';
+let selHale=null,selNpc=null;
+const BLOBS={};
+const b64buf=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(){
+  const pw=document.getElementById('pw').value.replace(/\s+/g,'').toLowerCase();
+  const err=document.getElementById('err');
+  if(!pw){err.textContent='Enter the passcode.';return}
+  err.textContent='';
+  try{
+    const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey(
+      {name:'PBKDF2',salt:b64buf(ENC.salt),iterations:ENC.iter,hash:'SHA-256'},
+      km,{name:'AES-GCM',length:256},false,['decrypt']);
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64buf(ENC.iv)},key,b64buf(ENC.ct));
+    DATA=JSON.parse(new TextDecoder().decode(pt));
+  }catch(e){err.textContent='That passcode does not open this tide.';return}
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').style.display='block';
+  // The Forge tab exists only for a team that has dealt with Kawelo. Teams who
+  // haven't never see it — the forge is earned in fiction, not advertised.
+  if((DATA.forge||{}).unlocked)document.getElementById('forgetab').style.display='';
+  render();
+  startLive();
+}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'$'+Number(n||0).toLocaleString();
+const initials=n=>String(n||'?').split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+/* ---- the live window: the bot's team API, token baked in this payload ---- */
+async function api(path,body){
+  if(!DATA.api||!DATA.token)throw new Error('no live link');
+  const r=await fetch(DATA.api+path,{method:body?'POST':'GET',
+    headers:{'Authorization':'Bearer '+DATA.token,
+             ...(body?{'Content-Type':'application/json'}:{})},
+    body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||('error '+r.status));
+  return j;
+}
+async function blobFor(path,key){
+  if(BLOBS[key]!==undefined)return BLOBS[key];
+  BLOBS[key]='';
+  try{
+    const r=await fetch(DATA.api+path,{headers:{'Authorization':'Bearer '+DATA.token}});
+    if(r.ok)BLOBS[key]=URL.createObjectURL(await r.blob());
+  }catch(e){}
+  return BLOBS[key];
+}
+function theBase(){return (liveOk&&LIVE&&LIVE.base)?LIVE.base:DATA.base}
+async function pollBase(){
+  if(!DATA.api||!DATA.token)return;
+  let changed=false;
+  try{
+    const j=await api('/api/team/base');
+    const sig=JSON.stringify(j);
+    changed=(sig!==lastSig)||!liveOk;
+    lastSig=sig;LIVE=j;liveOk=true;
+  }catch(e){changed=liveOk;LIVE=null;liveOk=false}
+  if(changed&&(tab==='base'||tab==='npcs'))render();
+}
+function startLive(){
+  if(!DATA.api||!DATA.token)return;
+  pollBase();
+  /* Primed once, like pollBase above it. Without this the muster waited for
+     the first 15s tick even when the page opened straight onto the NPCs tab. */
+  if(DATA.squads)pollSquads();
+  setInterval(()=>{if(!document.hidden)pollBase()},10000);
+  setInterval(()=>{if(!document.hidden&&tab==='npcs'&&DATA.squads)pollSquads()},15000);
+}
+function pick(t){tab=t;selHale=null;selNpc=null;render();
+  if(t==='base'||t==='npcs')pollBase();
+  if(t==='npcs'&&DATA.squads)pollSquads()}
+/* ---- squads ----
+   A squad is a formation of your own NPCs that marches as one party and holds
+   a village. Entirely live: there is nothing to bake, because where a squad is
+   standing changes by the minute. */
+let SQ=null,sqErr='';
+async function pollSquads(){
+  try{SQ=await api('/api/team/squads');sqErr=''}
+  catch(e){sqErr=e.message}
+  /* The muster moved INSIDE the NPCs tab and this check did not follow it.
+     There is no 'squads' tab, so this never fired: pollSquads filled SQ and
+     nothing repainted, leaving "Reading the muster roll..." and NO Form a
+     squad button until some other event forced a render. Switching tab and
+     coming back was that event, which is exactly how it was reported. */
+  if(tab==='npcs')render();
+}
+async function sqCall(path,body){
+  try{
+    const j=await api(path,body);
+    if(j&&j.squads)SQ=j;else await pollSquads();
+    sqErr='';
+  }catch(e){sqErr=e.message}
+  render();
+}
+function whenText(t){
+  const s=Math.max(0,Math.round(t-(Date.now()/1000)));
+  if(s<60)return s+'s';
+  if(s<3600)return Math.round(s/60)+' min';
+  if(s<86400)return Math.round(s/360)/10+' h';
+  return Math.round(s/8640)/10+' days';
+}
+/* Every vocabulary the players own — squads, roles, jobs — is a dropdown with
+   its own "add new" entry at the bottom, rather than a separate form sitting
+   somewhere else on the page. Picking the last option reveals the fields
+   inline, right where you were already looking. */
+const NEWOPT='<option value="+">+ New…</option>';
+function roleOptions(sel){
+  /* Coining is the LAST resort, not the only one. A team whose NPCs were
+     forged as Squadron Head, Co-Head and Member already owns those words —
+     offer them back before asking anyone to invent a synonym. */
+  const coined=(SQ.roles||[]).map(r=>r.name);
+  const low=coined.map(r=>r.toLowerCase());
+  const jobs=(SQ.jobs||[]).filter(j=>low.indexOf(j.toLowerCase())<0);
+  const opt=v=>`<option value="${esc(v)}"${v===sel?' selected':''}>${esc(v)}</option>`;
+  const grp=(label,list)=>list.length
+    ?`<optgroup label="${esc(label)}">${list.map(opt).join('')}</optgroup>`:'';
+  // A role that survived a rename — or a job an NPC no longer holds — still
+  // has to show, or opening the picker would silently drop it.
+  const orphan=sel&&coined.indexOf(sel)<0&&jobs.indexOf(sel)<0?opt(sel):'';
+  return [`<option value=""${sel?'':' selected'}>— role —</option>`]
+    .concat(orphan)
+    .concat(grp('Roles you coined',coined))
+    .concat(grp('Jobs they already hold',jobs))
+    .concat('<option value="+">+ New role…</option>').join('');
+}
+/* A squad is what LEAVES Final Measure. An NPC who stays isn't in one — they
+   simply hold their job there (owner ruling 2026-08-02). So the card offers a
+   posting, and the two kinds of posting are the home base or a squad. */
+function squadOptions(sel){
+  return [`<option value="">At ${esc(SQ.home_name||'base')} — their own job</option>`]
+    .concat((SQ.squads||[]).map(s=>`<option value="${esc(s.id)}"${
+      s.id===sel?' selected':''}>${esc(s.name)}</option>`))
+    .concat('<option value="+">+ New squad…</option>').join('');
+}
+/* Which squad an NPC stands in, and under what role. */
+function squadOf(key){
+  return (SQ.squads||[]).find(s=>(s.members||[]).some(m=>m.key===key));
+}
+function roleOf(key){
+  const s=squadOf(key);
+  if(!s)return '';
+  return ((s.members||[]).find(m=>m.key===key)||{}).role||'';
+}
+/* The squad controls that ride on an NPC's own card. This is where assigning
+   someone actually belongs — you decide a person's posting while looking at
+   the person, not by hunting for the squad they aren't in yet. */
+function squadPicker(c){
+  if(!(DATA.squads&&SQ&&liveOk))return'';
+  const mine=squadOf(c.key);
+  const marching=mine&&mine.trip;
+  if(marching)return `<div class="sqpick"><span class="facelab">Posting</span>
+    <div class="pmeta"><b>${esc(mine.name)}</b> — on the road, so their posting
+    is fixed until they arrive.</div></div>`;
+  // In a squad → they take a role in it. At home → they keep their job, and
+  // the only thing left to choose is which hale they work out of.
+  const second=mine
+    ? `<label class="facelab">Role in the squad
+         <select class="np-role">${roleOptions(
+            roleOf(c.key)||((c.forge||{}).job||''))}</select></label>`
+    : `<div class="pmeta muted np-athome">Staying at
+         ${esc(SQ.home_name||'base')}${c.forge&&c.forge.job?' as '+esc(c.forge.job):''}${
+         c.post?', out of '+esc(c.post):''}.</div>`;
+  return `<div class="sqpick" data-npc="${esc(c.key)}">
+    <label class="facelab">Posting
+      <select class="np-squad">${squadOptions(mine?mine.id:'')}</select></label>
+    ${second}
+    <div class="npnew" style="display:none"></div>
+    <div class="fc-msg muted np-msg"></div></div>`;
+}
+/* The inline panel a "+ New…" choice opens, for either dropdown. */
+function newPanel(kind){
+  if(kind==='squad')return `<label class="facelab">Name the squad
+    <input type="text" class="nn-name" placeholder="e.g. The Salt Line"></label>
+    <button class="gbtn nn-go">Form it</button>
+    <button class="linkbtn nn-cancel">cancel</button>`;
+  return `<label class="facelab">Name the role
+    <input type="text" class="nn-name" placeholder="e.g. Reef Scout"></label>
+    <label class="facelab">What do they do?
+      <textarea class="nn-desc" rows="2"></textarea></label>
+    <button class="gbtn nn-go">Save the role</button>
+    <button class="linkbtn nn-cancel">cancel</button>
+    <p class="hint">Yours to invent. It joins every squad's dropdown, and the
+    devs are told so they can give it teeth.</p>`;
+}
+function wireSquadPicker(root){
+  const box=root.querySelector('.sqpick[data-npc]');
+  if(!box)return;
+  const key=box.dataset.npc;
+  const sq=box.querySelector('.np-squad'), ro=box.querySelector('.np-role');
+  const roleVal=()=>(ro&&ro.value!=='+')?ro.value:'';
+  const panel=box.querySelector('.npnew'), msg=box.querySelector('.np-msg');
+  const close=()=>{panel.style.display='none';panel.innerHTML=''};
+  const open=(kind,then)=>{
+    panel.innerHTML=newPanel(kind);panel.style.display='';
+    const name=panel.querySelector('.nn-name');
+    name.focus();
+    panel.querySelector('.nn-cancel').onclick=()=>{close();render()};
+    panel.querySelector('.nn-go').onclick=()=>{
+      const v=name.value.trim();
+      if(!v){msg.textContent='Give it a name first.';return}
+      then(v,(panel.querySelector('.nn-desc')||{}).value||'');
+    };
+  };
+  sq.onchange=()=>{
+    if(sq.value==='+')return open('squad',(name)=>
+      sqCall('/api/team/squad',{action:'create',name:name,npc:key,
+                                role:roleVal(),player:sqWho()}));
+    close();
+    if(!sq.value){
+      const mine=squadOf(key);
+      if(mine)sqCall('/api/team/squad',
+        {action:'remove',id:mine.id,npc:key,player:sqWho()});
+      return;
+    }
+    sqCall('/api/team/squad',{action:'add',id:sq.value,npc:key,
+      role:roleVal(),player:sqWho()});
+  };
+  if(ro)ro.onchange=async()=>{
+    const mine=squadOf(key);
+    if(ro.value==='+')return open('role',async(name,desc)=>{
+      try{
+        const j=await api('/api/team/role-add',{name:name,desc:desc,player:sqWho()});
+        if(SQ)SQ.roles=j.roles||SQ.roles;
+        if(mine)await sqCall('/api/team/squad',
+          {action:'role',id:mine.id,npc:key,role:name,player:sqWho()});
+        else render();
+      }catch(e){sqErr=e.message;render()}
+    });
+    if(!mine){msg.textContent='Put them in a squad first.';return}
+    sqCall('/api/team/squad',
+      {action:'role',id:mine.id,npc:key,role:ro.value,player:sqWho()});
+  };
+}
+function squadCard(s){
+  const rows=(s.members||[]).map(m=>`<tr data-npc="${esc(m.key)}">
+    <td><b>${esc(m.name)}</b>${m.job?'<div class="muted fsm">'+esc(m.job)+'</div>':''}</td>
+    <td><select class="sq-role">${roleOptions(m.role||m.job)}</select></td>
+    <td class="muted">${m.hp?esc(m.hp)+' max HP':''}</td>
+    <td><button class="linkbtn sq-drop">remove</button></td></tr>`).join('')
+    ||'<tr><td colspan="4" class="muted">Nobody posted to this squad yet.</td></tr>';
+  const free=(SQ.unassigned||[]).map(n=>
+    `<option value="${esc(n.key)}">${esc(n.name)}${n.job?' — '+esc(n.job):''}</option>`).join('');
+  let status,controls;
+  if(s.trip){
+    const t=s.trip;
+    status=t.state==='queued'
+      ? `<span class="sqtag queued">leaves in ${whenText(t.depart)}</span>
+         marching to <b>${esc(placeName(t.to))}</b>`
+      : `<span class="sqtag walking">on the road</span>
+         to <b>${esc(placeName(t.to))}</b> — arrives in ${whenText(t.arrive)}`;
+    controls=`<p class="hint">They're already moving. Wait for them to arrive
+      before you give a new order.</p>`;
+  }else{
+    const at=(s.members||[]).map(m=>m.place).filter((v,i,a)=>a.indexOf(v)===i);
+    const here=at.length===1?(at[0]?placeName(at[0]):SQ.home_name):
+               at.length?'scattered':'—';
+    status=`<span class="sqtag home">holding</span> <b>${esc(here)}</b>`;
+    controls=`<div class="sqsend">
+      <select class="sq-dest">${(SQ.places||[]).map(p=>
+        `<option value="${esc(p.key)}">${esc(p.name)}${
+          p.minutes!=null?' — '+Math.round(p.minutes/60)+'h from base':''}</option>`).join('')}</select>
+      <select class="sq-when">
+        <option value="0">Send now</option>
+        <option value="1">Send in 1 hour</option>
+        <option value="6">Send in 6 hours</option>
+        <option value="12">Send in 12 hours</option>
+        <option value="24">Send tomorrow</option>
+      </select>
+      <button class="gbtn sq-go">Send</button>
+      <button class="linkbtn sq-home">recall to base</button></div>`;
+  }
+  return `<div class="pcard squad" data-sq="${esc(s.id)}">
+    <div class="sqhead">
+      <div class="sqlogo">${esc(initials(s.name))}</div>
+      <div class="sqhead-t">
+        <h2>${esc(s.name)} <button class="linkbtn sq-kill">disband</button></h2>
+        <div class="pmeta">${status}</div>
+      </div>
+    </div>
+    <div class="tscroll"><table class="sqtab"><tbody>${rows}</tbody></table></div>
+    <div class="sqadd">
+      <span class="facelab">Post someone else to this squad</span>
+      <select class="sq-new">${free
+        ? '<option value="" selected>— nobody yet —</option>'+free
+        : '<option value="">everyone is posted</option>'}</select>
+      <button class="linkbtn sq-add">post to squad</button></div>
+    ${controls}
+    <div class="logorow">
+      <label class="facelab">${s.logo?'Replace their logo':'Give them a logo'}
+        <input type="file" class="lg-file"
+               accept="image/png,image/jpeg,image/gif,image/webp"></label>
+      <button class="gbtn lg-go">Upload</button>
+      <div class="fc-msg muted lg-msg"></div>
+      <p class="hint">A picture or a gif, 10MB max — the mark this squad
+      carries. It goes with them, and goes when they disband.</p>
+    </div></div>`;
+}
+function placeName(k){
+  const p=(SQ&&SQ.places||[]).find(x=>x.key===k);
+  return p?p.name:k;
+}
+function wireSquad(el){
+  const sid=el.dataset.sq;
+  const q=(s)=>el.querySelector(s);
+  const rec=(SQ.squads||[]).find(x=>x.id===sid)||{};
+  const badge=q('.sqlogo');
+  if(badge&&rec.logo)blobFor('/api/team/squad-logo-img?id='+encodeURIComponent(sid),
+                             'squad:'+sid).then(u=>{
+    if(u)badge.innerHTML='<img src="'+u+'" alt="">'});
+  const lgo=q('.lg-go');
+  if(lgo)lgo.onclick=async()=>{
+    const msg=q('.lg-msg');
+    // classList, not className — the element is re-queried by its .lg-msg
+    // hook, and overwriting className would strip that hook off after the
+    // first message, leaving the second one with nowhere to land.
+    const say=(cls,text)=>{
+      msg.classList.remove('muted','ok','err');
+      msg.classList.add(cls);msg.textContent=text;
+    };
+    let pic;
+    try{pic=await fileB64(q('.lg-file'))}
+    catch(e){say('err',e.message);return}
+    if(!pic){say('muted','Pick a file first.');return}
+    lgo.disabled=true;lgo.textContent='Uploading…';msg.textContent='';
+    try{
+      const j=await api('/api/team/squad-logo',
+        {id:sid,filename:pic.filename,content_type:pic.content_type,data:pic.data});
+      BLOBS['squad:'+sid]=undefined;      // drop the cached old mark
+      if(j&&j.squads)SQ=j;
+      sqErr='';render();
+    }catch(e){
+      say('err',e.message);
+      lgo.disabled=false;lgo.textContent='Upload';
+    }
+  };
+  el.querySelectorAll('tr[data-npc]').forEach(tr=>{
+    const npc=tr.dataset.npc;
+    const sel=tr.querySelector('.sq-role');
+    if(sel)sel.onchange=()=>sqCall('/api/team/squad',
+      {action:'role',id:sid,npc:npc,role:sel.value,player:sqWho()});
+    const drop=tr.querySelector('.sq-drop');
+    if(drop)drop.onclick=()=>sqCall('/api/team/squad',
+      {action:'remove',id:sid,npc:npc,player:sqWho()});
+  });
+  if(q('.sq-add'))q('.sq-add').onclick=()=>{
+    const v=q('.sq-new').value;
+    // Used to fall silent, which read as a broken button.
+    if(!v){sqErr='Pick who you want posted first.';render();return}
+    sqCall('/api/team/squad',{action:'add',id:sid,npc:v,player:sqWho()});
+  };
+  if(q('.sq-kill'))q('.sq-kill').onclick=()=>{
+    if(confirm('Disband this squad? The NPCs stay where they are.'))
+      sqCall('/api/team/squad',{action:'disband',id:sid,player:sqWho()});
+  };
+  if(q('.sq-go'))q('.sq-go').onclick=()=>{
+    const hrs=Number(q('.sq-when').value||0);
+    sqCall('/api/team/squad-send',{id:sid,place:q('.sq-dest').value,
+      depart:hrs?(Date.now()/1000+hrs*3600):0,player:sqWho()});
+  };
+  if(q('.sq-home'))q('.sq-home').onclick=()=>
+    sqCall('/api/team/squad-send',{id:sid,recall:true,player:sqWho()});
+}
+function sqWho(){
+  const el=document.getElementById('sq-who');
+  const v=el?el.value.trim():'';
+  if(v)try{localStorage.setItem('tht-who',v)}catch(e){}
+  return v;
+}
+function savedWho(){
+  try{return localStorage.getItem('tht-who')||''}catch(e){return ''}
+}
+/* The muster lives inside the NPCs tab — squads are a way of arranging the
+   same people the tab already lists, so splitting them across two tabs made
+   you hold the roster in your head. Returns HTML; wireSquads attaches it. */
+function squadsBlock(){
+  if(!(DATA.squads&&DATA.api&&DATA.token))return'';
+  if(!SQ)return`<div class="muster"><h2>Squads</h2><p class="muted">`
+    +(sqErr?esc(sqErr):'Reading the muster roll…')+`</p></div>`;
+  const cards=(SQ.squads||[]).map(squadCard).join('')
+    ||`<p class="muted">No squads yet. Name one above, then post people to it —
+       or pick <b>+ New squad…</b> straight from any NPC's Posting dropdown,
+       which does both at once.</p>`;
+  return `<div class="muster">
+    <h2>Squads</h2>
+    <p class="muted">A squad marches as one party and holds the village it
+    arrives at — while they're standing there, that place is yours. Home is
+    <b>${esc(SQ.home_name||'base')}</b>.</p>
+    <label class="whorow">Your player name
+      <input id="sq-who" type="text" value="${esc(savedWho())}"
+             placeholder="so the log knows who gave the order"></label>
+    <div class="mkrow">
+      <input id="sq-name" type="text" placeholder="Name a new squad — e.g. The Salt Line">
+      <button class="gbtn" id="sq-make">Form a squad</button>
+      <p class="hint">An empty squad is fine. Post people to it from its own
+      list below, or from any NPC's Posting dropdown.</p>
+    </div>
+    ${sqErr?'<div class="err">'+esc(sqErr)+'</div>':''}
+    ${cards}</div>`;
+}
+function wireSquads(m){
+  if(!(DATA.squads&&SQ))return;
+  m.querySelectorAll('.squad').forEach(wireSquad);
+  const name=m.querySelector('#sq-name'), make=m.querySelector('#sq-make');
+  const form=()=>{
+    const n=(name||{}).value||'';
+    if(!n.trim()){sqErr='Name the squad first.';render();return}
+    sqCall('/api/team/squad',{action:'create',name:n,player:sqWho()});
+  };
+  if(make)make.onclick=form;
+  if(name)name.addEventListener('keydown',e=>{if(e.key==='Enter')form()});
+}
+/* ---- base map geometry (ring fallback = the bot's base_map_view math) ---- */
+function haleXY(h,i,n,cv){
+  if(typeof h.x==='number'&&typeof h.y==='number')return{x:h.x,y:h.y};
+  const a=-Math.PI/2+2*Math.PI*i/Math.max(1,n);
+  return{x:cv.w/2+cv.w*0.38*Math.cos(a),y:cv.h/2+cv.h*0.36*Math.sin(a)};
+}
+function liveTag(){
+  if(!DATA.token)return'';
+  return liveOk?'<span class="livetag"><span class="livedot"></span>live</span>'
+               :'<span class="livetag"><span class="offdot"></span>offline — last snapshot</span>';
+}
+function wirePortrait(el,c){
+  if(!el)return;
+  if(c.gif){el.innerHTML='<img src="'+esc(c.gif)+'" alt="">';return}
+  if(c.image&&liveOk)blobFor('/api/team/npc-image?key='+encodeURIComponent(c.key),'npc:'+c.key)
+    .then(u=>{if(u)el.innerHTML='<img src="'+u+'" alt="">'});
+}
+function npcCard(c,withMove){
+  const routine=(c.routine||[]).map(r=>'<li>'+esc(r)+'</li>').join('');
+  // Health and what they can do. The bot sends ability NAMES and damage only —
+  // never how to beat them (threat notes and kill notes stay dev-side).
+  const abil=(c.abilities||[]).map(a=>
+    '<li><b>'+esc(a.name)+'</b>'+(a.damage?' <span class="dmg">'+esc(a.damage)+'</span>':'')
+    +(a.desc?'<br><span class="muted">'+esc(a.desc)+'</span>':'')+'</li>').join('');
+  const vitals=(c.hp||abil)?`<div class="vitals">
+    ${c.hp?'<div class="hp"><span class="k">Constitution</span><b>'+c.hp+'</b></div>':''}
+    ${abil?'<div class="abils"><span class="k">Abilities</span><ul>'+abil+'</ul></div>':''}
+    </div>`:'';
+  const inSquad=DATA.squads&&SQ&&liveOk&&!!squadOf(c.key);
+  const move=(withMove&&liveOk&&!inSquad)?`
+    <div class="moverow"><select class="mv-house">${(theBase().houses||[])
+      .map(h=>'<option '+(h.name===c.post?'selected':'')+'>'+esc(h.name)+'</option>').join('')}</select>
+    <button class="gbtn mv-go">Move</button></div>
+    <p class="hint">Tasks and routines are set by the devs — you can move your
+    NPC between hale, not rewrite their day.</p>`:'';
+  return `<div class="pcard npcprof" data-npc="${esc(c.key)}">
+    <div class="npcprof-head">
+      <div class="portrait">${esc(initials(c.name))}</div>
+      <div><h2>${esc(c.name)}</h2>
+        <div class="pmeta">${(c.titles||[]).length?esc(c.titles.join(', '))+' · ':''}${esc(c.affiliation||'')}</div>
+        <div class="pmeta">Post: <b>${esc(c.post||'—')}</b>${c.function?' <span class="muted">('+esc(c.function)+')</span>':''}</div>
+        ${c.away?'<div class="pmeta"><span class="sqtag walking">away</span>'+esc(c.away)+'</div>':''}
+        ${c.squad?'<div class="pmeta muted">🛡️ '+esc(c.squad)+(c.squad_role?' · '+esc(c.squad_role):'')+'</div>':''}
+      </div></div>
+    ${squadPicker(c)}
+    ${c.forge&&c.forge.owner?'<div class="pmeta forgeline">🜲 forged by <b>'
+      +esc(c.forge.owner)+'</b>'+(c.forge.rarity?' · '+esc(c.forge.rarity):'')
+      +(c.forge.job?' · '+esc(c.forge.job):'')+'</div>':''}
+    ${c.blurb?'<div class="npcblurb">'+esc(c.blurb)+'</div>':''}
+    ${vitals}
+    ${c.task?'<div class="taskline"><span class="k">Current task</span>'+esc(c.task)+'</div>':''}
+    ${routine?'<div class="routine"><span class="k">Routine</span><ul>'+routine+'</ul></div>':''}
+    ${(!c.task&&!routine)?'<p class="muted fsm">No task or routine on record yet.</p>':''}
+    ${move}</div>`;
+}
+function wireNpcCard(root,c){
+  wirePortrait(root.querySelector('.portrait'),c);
+  wireSquadPicker(root);
+  const go=root.querySelector('.mv-go');
+  if(go)go.onclick=async()=>{
+    const house=root.querySelector('.mv-house').value;
+    go.disabled=true;go.textContent='Moving…';
+    try{await api('/api/team/base-npc',{npc:c.key,house});lastSig='';await pollBase()}
+    catch(e){alert(e.message);go.disabled=false;go.textContent='Move'}
+  };
+}
+function renderBase(m){
+  const b=theBase();
+  if(!b){m.innerHTML='<h1>Base</h1><p class="muted">No base on record for this team — yet.</p>';return}
+  const cv=b.canvas||{w:1200,h:800};
+  const pct=(v,a)=>(v/(a==='x'?cv.w:cv.h)*100)+'%';
+  const n=(b.houses||[]).length;
+  let marks='';
+  (b.houses||[]).forEach((h,i)=>{
+    const p=haleXY(h,i,n,cv);
+    marks+=`<div class="bhale${selHale===h.name?' sel':''}" data-hale="${esc(h.name)}"
+      style="left:${pct(p.x,'x')};top:${pct(p.y,'y')}">
+      <div class="hbox">⌂</div><div class="hlbl">${esc(h.name)}</div></div>`;
+    (h.npcs||[]).forEach((k,j)=>{
+      const c=(b.npcs||{})[k];if(!c)return;
+      /* Scales with the canvas, exactly as map/dashboard.html does. These
+         offsets were authored against the default 1200x800 and turned into
+         a PERCENT of whatever canvas is live, so an uploaded ground plan
+         (Final Measure is 2500x2500) halved the gap and piled the dots up.
+         THERE ARE TWO COPIES OF THIS FORMULA -- this one and
+         map/dashboard.html -- and they must move together. */
+      const gx=26*(cv.w/1200),gy=26*(cv.h/800);
+      const dx=p.x-gx+(j%3)*gx,dy=p.y+gy*(34/26)+Math.floor(j/3)*gy;
+      marks+=`<div class="bnpc${selNpc===k?' sel':''}" data-npc="${esc(k)}"
+        title="${esc(c.name)} — ${esc(h.name)}"
+        style="left:${pct(dx,'x')};top:${pct(dy,'y')}">${esc(initials(c.name))}</div>`;
+    });
+  });
+  m.innerHTML=`<h1>${esc(b.name)}</h1>
+    <div class="pmeta">${b.status?'📍 <b>'+esc(b.status)+'</b>':''}
+      ${b.steward?' · Steward: <b>'+esc(b.steward)+'</b>':''}${liveTag()}</div>
+    ${b.desc?'<p class="basedesc">'+esc(b.desc)+'</p>':''}
+    <div class="bmapwrap" style="aspect-ratio:${cv.w} / ${cv.h}">
+      <div class="bground" id="bground"></div>
+      <div class="boverlay">${marks}</div>
+    </div>
+    <p class="hint">Every glowing dot is one of your NPCs, live from the island —
+    tap a house or a dot for details.${liveOk?' You can move your NPCs between hale from their card.':''}</p>
+    <div id="bpanel"></div>`;
+  if(b.image&&liveOk)blobFor('/api/team/base-image','plan:'+(b.key||''))
+    .then(u=>{const g=document.getElementById('bground');
+      if(u&&g)g.style.cssText='background:url('+u+') center/cover no-repeat'});
+  m.querySelectorAll('.bhale').forEach(el=>el.onclick=()=>{
+    selHale=el.dataset.hale===selHale?null:el.dataset.hale;selNpc=null;render()});
+  m.querySelectorAll('.bnpc').forEach(el=>el.onclick=e=>{e.stopPropagation();
+    selNpc=el.dataset.npc===selNpc?null:el.dataset.npc;selHale=null;render()});
+  const box=m.querySelector('#bpanel');
+  if(selNpc){
+    const c=(b.npcs||{})[selNpc];
+    if(c){box.innerHTML=npcCard(c,true);wireNpcCard(box.firstElementChild,c)}
+  }else if(selHale){
+    const h=(b.houses||[]).find(x=>x.name===selHale);
+    if(h){box.innerHTML=`<div class="pcard"><h2>${esc(h.name)}${h.function?' <span class="muted fsm">— '+esc(h.function)+'</span>':''}</h2>
+      ${(h.npcs||[]).length?'<div class="pmeta">'+h.npcs.map(k=>{const c=(b.npcs||{})[k];
+        return '<a href="#" class="npclink" data-npc="'+esc(k)+'"><b>'+esc(c?c.name:k)+'</b></a>'}).join(' · ')+'</div>'
+        :'<div class="pmeta muted">No one stationed here right now.</div>'}
+      ${h.staff?'<div class="pmeta muted">Also: '+esc(h.staff)+'</div>':''}</div>`;
+      box.querySelectorAll('.npclink').forEach(a=>a.onclick=e=>{e.preventDefault();
+        selNpc=a.dataset.npc;selHale=null;render()});
+    }
+  }
+}
+function render(){
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  document.getElementById('updated').textContent='updated '+DATA.updated;
+  const m=document.getElementById('main');
+  if(tab==='team'){
+    const roster=DATA.players.map(p=>`<tr><td><b>${esc(p.name)}</b></td>
+      <td class="muted">${esc(p.pronouns)}</td><td>${esc(p.label)}</td>
+      <td class="muted">${esc((p.titles||[]).join(', '))}</td></tr>`).join('');
+    const stash=DATA.stash.length?DATA.stash.map(i=>`<tr><td>${esc(i.name)}</td>
+      <td>×${i.qty}</td><td class="muted">${esc(i.desc||'')}</td></tr>`).join('')
+      :'<tr><td colspan="3" class="muted">The stash is empty.</td></tr>';
+    m.innerHTML=`<h1>${esc(DATA.team)}</h1>
+      <div><span class="stat goldv"><div class="v">${money(DATA.treasury)}</div><div class="k">Team Bank</div></span>
+      <span class="stat"><div class="v">${DATA.players.length}</div><div class="k">Players</div></span>
+      <span class="stat"><div class="v">${DATA.stash.length}</div><div class="k">Stash items</div></span></div>
+      <h2>Roster</h2><div class="tscroll"><table><thead><tr><th>Name</th><th>Pronouns</th><th>Label</th><th>Titles</th></tr></thead>
+      <tbody>${roster}</tbody></table></div>
+      <h2>Team stash</h2><div class="tscroll"><table><thead><tr><th>Item</th><th>Qty</th><th>About</th></tr></thead>
+      <tbody>${stash}</tbody></table></div>`;
+  }else if(tab==='base'){
+    renderBase(m);
+  }else if(tab==='npcs'){
+    const b=theBase();
+    const cards=b?Object.values(b.npcs||{}).sort((a,c)=>a.name.localeCompare(c.name)):[];
+    /* THREE OF THE SIX TEAMS HOLD NO BASE, and the single empty state told
+       them nobody was stationed at "your base" — naming one they do not have.
+       The Base tab has always said the true thing to the same team, so these
+       two now agree instead of contradicting each other one click apart.
+       Neither wording claims the team has no NPCs: an away card is stationed
+       nowhere by definition, and the out-in-the-field block below may well
+       have people in it. */
+    const roster=cards.length
+      ? `<h2>Everyone at ${esc(b.name)}</h2>
+         <div class="npcgrid">${cards.map(c=>npcCard(c,true)).join('')}</div>`
+      : b
+        ? `<p class="muted">No NPCs stationed at ${esc(b.name||'your base')} — yet.</p>`
+        : '<p class="muted">No base on record for this team — yet, so there is nobody stationed.</p>';
+    /* Item 104. Yours, placed somewhere, in no hale — so on no site until now.
+       DATA, not theBase(): `elsewhere` is BAKED ONLY. /api/team/base answers
+       with the base, its hales and their stationed cards and nothing else, so
+       there is no live copy of this list to prefer.
+       This read `D` from 2026-08-31 until 2026-09-01 — an identifier the
+       client never declares. The whole branch threw ReferenceError three
+       lines before it reached innerHTML, so clicking NPCs lit the tab button
+       and repainted nothing at all, on every team's site. */
+    const away=DATA.elsewhere||[];
+    /* Rendered WITHOUT the move row. The bot refuses to move an NPC who is in
+       no hale — team_base_npc: "that NPC isn't stationed at your base" — so a
+       Move button here is a control the server has already said no to. */
+    const awayBlock=away.length
+      ? `<h2>Out in the field</h2>
+         <p class="muted">Yours, standing somewhere, not written into a hale.</p>
+         <div class="npcgrid">${away.map(c=>npcCard(c,false)).join('')}</div>`
+      : '';
+    m.innerHTML=`<h1>NPCs${liveTag()}</h1>${squadsBlock()}${roster}${awayBlock}`;
+    wireSquads(m);
+    /* Both blocks emit .npcprof, so the lookup has to cover both or an away
+       card is inert — no portrait, no posting picker. `b` is null for a team
+       holding no base, which is the team most likely to have someone out in
+       the field, so it is never dereferenced here. */
+    const byKey={};
+    cards.forEach(c=>{byKey[c.key]=c});
+    away.forEach(c=>{byKey[c.key]=c});
+    m.querySelectorAll('.npcprof').forEach(el=>{
+      const c=byKey[el.dataset.npc];
+      if(!c)return;
+      wireNpcCard(el,c);
+      // Click-through goes to this NPC's dot on the base map. An away NPC is
+      // in no hale, so renderBase has no dot to select and the jump would
+      // land on an empty panel — they stay unclickable.
+      if(!(b&&(b.npcs||{})[c.key]))return;
+      el.style.cursor='pointer';
+      el.onclick=e=>{if(e.target.closest('.moverow,.sqpick,a'))return;
+        tab='base';selNpc=c.key;selHale=null;render();
+        document.querySelectorAll('.tabbtn').forEach(x=>x.classList.toggle('on',x.dataset.t==='base'))};
+    });
+  }else if(tab==='forge'){
+    m.innerHTML='<h1>The Forge</h1>'+forgeForm();
+  }else{
+    m.innerHTML='<h1>Players</h1>'+DATA.players.map(p=>{
+      const sk=Object.entries(p.skills||{}).filter(e=>e[1]>0)
+        .map(e=>e[0].charAt(0).toUpperCase()+e[0].slice(1)+' '+(['','I','II','III','IV','V'][e[1]]||e[1])).join(' · ');
+      const inv=(p.inventory||[]).map(i=>`<tr><td>${esc(i.name)}</td><td>×${i.qty}</td>
+        <td class="muted">${esc(i.desc||'')}</td></tr>`).join('')
+        ||'<tr><td colspan="3" class="muted">Empty bag.</td></tr>';
+      return `<div class="pcard"><h2>${esc(p.name)}</h2>
+        <div class="pmeta">${esc(p.pronouns)}${p.pronouns?' · ':''}<b>${esc(p.label)}</b>
+        ${p.affiliation?' · '+esc(p.affiliation):''}
+        ${(p.titles||[]).length?' · '+esc(p.titles.join(', ')):''}</div>
+        <div class="pmeta">💰 ${money(p.wallet)}${sk?' · 🎓 '+esc(sk):''}</div>
+        <div class="tscroll"><table><thead><tr><th>Item</th><th>Qty</th><th>About</th></tr></thead><tbody>${inv}</tbody></table></div>
+        </div>`;}).join('');
+  }
+}
+
+/* ---- the forge ----
+   Buy a card from Kawelo, author the NPC here, a dev rules on it. The form
+   shows only the fields that card pays for, and only the jobs still open. */
+function forgeRarity(){
+  const s=document.getElementById('f-rarity');
+  return s?s.value:'common';
+}
+function forgeForm(){
+  const F=DATA.forge||{}, r=forgeRarity();
+  const fields=(F.fields||{})[r]||[];
+  const jobs=(F.jobs||[]).filter(j=>r==='special'||
+      (F.tiers||[]).indexOf(j.tier)<=(F.tiers||[]).indexOf(r));
+  const rows=fields.map(f=>{
+    if(f==='job'){
+      // "common+", not "common". A job's tier is the LOWEST card that may take
+      // it, never a ceiling on what you get — but the bare word read as a
+      // verdict on the NPC you were about to forge. Velvet asked (2026-08-09)
+      // for Squadron Member to be "both common and uncommon as the same role",
+      // which it already was: she was reading "Squadron Member — common" while
+      // holding an uncommon card and concluding it would forge a common one.
+      // The card sets the HP band and how much of the character you write; the
+      // job only sets where in that band they land.
+      // A FULL job is shown and disabled, never hidden. Dropping it made
+      // "all posts filled" indistinguishable from "the site is broken" —
+      // see the note in forge_payload for the day that cost.
+      const opts=jobs.map(j=>{
+        const note=j.full
+          ?` — all ${j.cap} post${j.cap===1?'':'s'} filled`
+          :(j.left!==null&&j.left!==undefined?` (${j.left} left)`:'');
+        return `<option value="${esc(j.title)}"${j.full?' disabled':''}>`
+          +`${esc(j.title)} — ${esc(j.tier)}+${note}</option>`;
+      }).join('');
+      const anyOpen=jobs.some(j=>!j.full);
+      // Writing a job is the last entry in the same dropdown you pick one
+      // from, not a form elsewhere on the page.
+      return `<label>${esc((F.prompts||{}).job||'Job')}
+        <select id="f-job" onchange="jobPick()">${opts||'<option value="">no posts open</option>'}
+        <option value="+">+ Add a job…</option></select></label>
+        ${jobs.length&&!anyOpen?`<p class="hint">Every post this card can take
+        is filled. That is a cap, not a fault — ask a dev to raise one, or
+        write a new job with <b>+ Add a job…</b>.</p>`:''}
+        <p class="hint">Every post here takes the <b>${esc(r)}</b> card you are
+        spending — the tier beside a job is the <i>lowest</i> card it accepts,
+        not what you will get. Spend a better card on the same job and you get
+        a better character in it: the card sets their strength and how much of
+        them you write, the job only sets where in that band they land.</p>
+        <div id="j-new" style="display:none">
+          <label>Job title<input id="j-title" type="text" placeholder="e.g. Reef Warden"></label>
+          <label>What does the job actually do?<textarea id="j-desc" rows="3"
+            placeholder="A sentence or two — enough for a dev to tier it fairly."></textarea></label>
+          <label>Which tier are you asking for?
+            <select id="j-tier"><option value="">choose…</option>
+            ${(F.tiers||[]).map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('')}
+            </select></label>
+          <button class="gbtn" id="j-send" onclick="jobSend()">Propose it</button>
+          <button class="linkbtn" onclick="jobPick(true)">cancel</button>
+          <p class="hint">The tier is what decides which cards may hire the job:
+          a card can take a job of its own tier or below, so the higher you ask,
+          the rarer the card it takes. A dev has the final say on that and on how
+          many can exist. Once they've ruled it's in this dropdown for good —
+          it can't be used on the card you're forging right now.</p>
+          <div class="err" id="j-err"></div>
+        </div>`;
+    }
+    const big=['personality','voice','backstory','goal','ability','trait'].indexOf(f)>=0;
+    const p=esc((F.prompts||{})[f]||f);
+    return big?`<label>${p}<textarea id="f-${f}" rows="3"></textarea></label>`
+              :`<label>${p}<input id="f-${f}" type="text"></label>`;
+  }).join('');
+  // Rare and above choose their own face, so the picture rides WITH the
+  // submission — it used to be handed to a dev out of band, which is why so
+  // many forged NPCs ended up wearing a pool face they never picked.
+  const face=(F.portrait||[]).indexOf(r)>=0
+    ? `<div class="facerow"><label class="facelab">Their face — a picture or a gif
+         <input type="file" id="f-face" class="fc-file"
+                accept="image/png,image/jpeg,image/gif,image/webp">
+       </label>
+       <p class="hint">Optional, 10MB max. Send one and it's theirs the moment a
+       dev approves the card; skip it and they're given one from the pool.</p></div>`
+    : `<p class="muted">The card picks their face from the pool.</p>`;
+  const pend=(F.pending_jobs||[]).length
+    ? `<p class="hint">Waiting on a dev: ${(F.pending_jobs||[])
+        .map(j=>esc(j.title)).join(', ')}.</p>` : '';
+  return `<div class="pcard"><h2>Forge an NPC</h2>
+    <p class="muted">${esc((F.blurb||{})[r]||'')}</p>
+    <label>Which card are you spending?
+      <select id="f-rarity" onchange="render()">
+        ${['common','uncommon','rare','legendary','special'].map(x=>
+          `<option value="${x}"${x===r?' selected':''}>${x}</option>`).join('')}
+      </select></label>
+    <label>Your player name<input id="f-player" type="text"
+      placeholder="so the NPC knows who their creator is"></label>
+    ${rows}${face}
+    <button id="f-send" onclick="forgeSend()">Send to the devs</button>
+    <div class="err" id="f-err"></div>${pend}</div>`;
+}
+/* "+ Add a job…" is a choice in the job dropdown; picking it opens the fields
+   underneath and parks the select on nothing, so a proposal can never be
+   mistaken for the job this card is hiring. */
+function jobPick(cancel){
+  const sel=document.getElementById('f-job'), box=document.getElementById('j-new');
+  if(!sel||!box)return;
+  if(cancel||sel.value!=='+'){
+    box.style.display='none';
+    if(cancel)sel.selectedIndex=0;
+    return;
+  }
+  box.style.display='';
+  const t=document.getElementById('j-title');
+  if(t)t.focus();
+}
+async function fileB64(el){
+  const f=el&&el.files&&el.files[0];
+  if(!f)return null;
+  if(f.size>10*1024*1024)throw new Error('That picture is over 10MB.');
+  const b64=await new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(',')[1]||'');
+    r.onerror=()=>rej(new Error('could not read that file'));
+    r.readAsDataURL(f);
+  });
+  return {data:b64,filename:f.name,content_type:f.type};
+}
+async function jobSend(){
+  const err=document.getElementById('j-err'), btn=document.getElementById('j-send');
+  const tier=(document.getElementById('j-tier')||{}).value||'';
+  // Asked for here rather than left to the devs to guess, because a player who
+  // isn't given the field writes it into the title instead.
+  if(!tier){err.className='err';
+            err.textContent='Say which tier the job should be.';return}
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    await api('/api/team/job-propose',{
+      title:(document.getElementById('j-title')||{}).value||'',
+      description:(document.getElementById('j-desc')||{}).value||'',
+      tier:tier,
+      player:(document.getElementById('f-player')||{}).value||''});
+    err.className='ok';
+    err.textContent='Sent. A dev rules on the tier, and then it joins the list.';
+    ['j-title','j-desc'].forEach(i=>{const e=document.getElementById(i);if(e)e.value=''});
+    const ts=document.getElementById('j-tier');if(ts)ts.selectedIndex=0;
+    jobPick(true);
+  }catch(e){err.className='err';err.textContent=e.message}
+  btn.disabled=false;btn.textContent='Propose it';
+}
+async function forgeSend(){
+  const F=DATA.forge||{}, r=forgeRarity();
+  const err=document.getElementById('f-err');
+  const body={rarity:r,player:(document.getElementById('f-player')||{}).value||''};
+  ((F.fields||{})[r]||[]).forEach(f=>{
+    const el=document.getElementById('f-'+f);
+    if(el)body[f]=(el.value==='+'?'':el.value);
+  });
+  body.portrait=(F.portrait||[]).indexOf(r)>=0;
+  const btn=document.getElementById('f-send');
+  if(btn){btn.disabled=true;btn.textContent='Sending…';}
+  try{
+    if(body.portrait){
+      const pic=await fileB64(document.getElementById('f-face'));
+      if(pic){body.image=pic.data;body.filename=pic.filename;
+              body.content_type=pic.content_type}
+    }
+    await api('/api/team/forge-submit',body);
+    err.className='ok';
+    err.textContent='Sent. A dev will confirm your card and make them real.';
+  }catch(e){
+    err.className='err';
+    err.textContent=e.message;
+    if(btn){btn.disabled=false;btn.textContent='Send to the devs';}
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('go').onclick=unlock;
+  document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+});
+</script></body></html>
